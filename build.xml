@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<project name="travel-tmp"  default="remote-app-deploy" basedir=".">
+
+    <property file="build.properties"/>
+
+    <target name="echo">
+        <echo>current project is ${ant.project.name}</echo>
+    </target>
+
+   <!-- <target name="tstamp-system">
+        <tstamp/>
+        &lt;!&ndash;以下的几个属性是系统自带的,初始了tstamp之后,它们就有值了&ndash;&gt;
+        <echo message="system:"/>
+        <echo message="DSTAMP = ${DSTAMP}"/>
+        <echo message="TSTAMP = ${TSTAMP}"/>
+        <echo message="TODAY = ${TODAY}"/>
+    </target>
+
+    <target name="tstamp-mime">
+        <tstamp prefix="my">
+            <format property="day" pattern="yyyy-MM-dd"/>
+            <format property="time" pattern="HH:mm:ss"/>
+            <format property="dt" pattern="yyyy-MM-dd HH:mm:ss.SSS"/>
+            <format property="ymdhms" pattern="yyyyMMddHHmmss"/>
+        </tstamp>
+       <echo message="mine:"/>
+        <echo message="my.time = ${my.time}"/>
+        <echo message="my.day = ${my.day}"/>
+        <echo message="my.dt = ${my.dt}"/>
+        <echo message="my.ymdhms = ${my.ymdhms}"/>
+    </target>-->
+
+
+    <tstamp>
+        <format property="ymdhms" pattern="yyyyMMddHHmmss"/>
+    </tstamp>
+
+    <target name="remote-app-bak" depends="remote-tomcat-stop" >
+        <echo>##################### ${remote.app.name} bak start#####################</echo>
+        <sshexec host="${remote.host}"
+                 username="${remote.username}"
+                 password="${remote.password}"
+                 command="cd ${remote.app.tomcat.home}/webapps;
+                          if [ -f ${remote.app.name}.war ] ;then mv ${remote.app.name}.war ${remote.app.name}-${ymdhms}.war;fi ;
+                          if [ -f ${remote.app.name}-${ymdhms}.war ];then mv ${remote.app.name}-${ymdhms}.war  ${remote.app.bak.dir};fi ;
+                          if [ -d ${remote.app.name} ];then mv ${remote.app.name} ${remote.app.name}-${ymdhms};fi ;
+                          if [ -d ${remote.app.name}-${ymdhms} ];then mv ${remote.app.name}-${ymdhms} ${remote.app.bak.dir};fi ;
+                          "/>
+        <echo>##################### ${remote.app.name} bak end#####################</echo>
+    </target>
+
+    <target name="remote-app-deploy" depends="remote-app-bak">
+
+        <echo>##################### ${local.war.name}  uploading start#####################</echo>
+        <scp  file="${build.dir}/${local.war.name}" trust="true" todir="${remote.username}:${remote.password}@${remote.host}:${remote.temp.dir}"/>
+        <echo>##################### ${local.war.name}  uploading end#####################</echo>
+
+        <echo>##################### ${local.war.name} move start#####################</echo>
+        <sshexec host="${remote.host}"
+                 username="${remote.username}"
+                 password="${remote.password}"
+                 command="cd ${remote.app.tomcat.home}/webapps;
+                          cp /${remote.temp.dir}/${local.war.name} .;
+                          chmod 755 ${local.war.name};
+                          mv ${local.war.name} ${remote.app.name}.war;
+                 "/>
+        <echo>##################### ${local.war.name} move end#####################</echo>
+    </target>
+
+
+    <target name="remote-app-log">
+        <echo>##################### ${remote.app.name}  downlaod log start#####################</echo>
+        <scp  file="${remote.username}:${remote.password}@${remote.host}:${remote.app.tomcat.home}/logs/catalina.out" trust="true" todir="${build.dir}"/>
+        <echo>##################### ${remote.app.name}  downlaod log end#####################</echo>
+    </target>
+
+    <!-- tomcat init-->
+    <target name="remote-tomcat-init">
+        <echo>##################### tomcat init for ${remote.app.name} start#####################</echo>
+        <sshexec host="${remote.host}"
+                 trust="true"
+                 username="${remote.username}"
+                 password="${remote.password}"
+                 command="cd ${remote.tomcat.dir};
+                          rm -rf  ${remote.app.tomcat.name};
+                          cp -r ${remote.tomcat.name} ${remote.app.tomcat.name};
+                          chmod -R 755 ${remote.app.tomcat.name};
+                          sed -i 's/8005/${remote.app.tomcat.shutdown.port}/g' ./${remote.app.tomcat.name}/conf/server.xml;
+                          sed -i 's/8080/${remote.app.tomcat.visit.port}/g' ./${remote.app.tomcat.name}/conf/server.xml;
+                          sed -i 's/8009/${remote.app.tomcat.ajp.port}/g' ./${remote.app.tomcat.name}/conf/server.xml;
+                          "/>
+        <echo>##################### tomcat init for ${remote.app.name} end#####################</echo>
+    </target>
+
+
+
+
+
+    <!-- start tomcat-->
+    <target name="remote-tomcat-start">
+        <echo>##################### ${remote.app.name} tomcat stop start#####################</echo>
+        <sshexec host="${remote.host}"
+                 username="${remote.username}"
+                 password="${remote.password}"
+                 command="cd ${remote.app.tomcat.home} ;
+                          rm -rf ./logs/*;
+                          rm -rf ./work/*;
+                          ./bin/startup.sh;"/>
+        <echo>##################### ${remote.app.name} tomcat stop end#####################</echo>
+    </target>
+
+    <!-- stop tomcat-->
+    <target name="remote-tomcat-stop">
+        <echo>##################### ${remote.app.name} tomcat stop start#####################</echo>
+        <sshexec host="${remote.host}"
+                 username="${remote.username}"
+                 password="${remote.password}"
+                 command="cd ${remote.app.tomcat.home}; ./bin/shutdown.sh;"/>
+        <echo>##################### ${remote.app.name} tomcat stop end#####################</echo>
+    </target>
+
+
+
+
+
+</project>

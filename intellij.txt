@@ -1,0 +1,14 @@
+1、intellij  快捷键
+    shift,键盘上的意思是上档；书面意思有很多解释，指的是移动,搬移、替换,更换,变动,改变等意思，当然有的时候又指变速、换挡、消除的意思。
+    Alt是英文Alternative的缩写，中文含义为切换或者选择的意思，我们习惯称之为更改键、替换键。
+
+    Ctrl+Shift+A：查找快捷键盘
+    ctrl+Alt+S:打开settings
+    Ctrl+Alt+L:格式化
+    Ctrl+Alt+T:try catch if else...；t 是 template(模板) 的意思
+    Ctrl+F12：查看某类的方法
+    Ctrl+H: 查看类/接口的继承结构  ；h 是 hierarchy ['haɪərɑːkɪ]（层次的意思） 的意思。
+    Ctrl+N：查找类；N是 name的意思
+    Shift +f6: 修改文件名
+
+
